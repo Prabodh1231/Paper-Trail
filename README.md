@@ -2,6 +2,13 @@
 
 A local-first GraphRAG prototype for following a paper's references, finding openly available versions, and asking questions grounded in the paper and its cited works.
 
+## Screenshots
+
+![Start page: drop a PDF, paste text, or try a sample](docs/screenshots/start.jpg)
+![Paper workspace with reference sidenotes](docs/screenshots/workspace.jpg)
+![Answer with numbered citations](docs/screenshots/answer.jpg)
+![Reference map of the paper's citations](docs/screenshots/map.jpg)
+
 ## Run on Windows
 
 1. Install Node.js 18 or newer.
@@ -21,9 +28,10 @@ The app uses Node's built-in libraries and does not need `npm install`. Set `$en
 2. Click **Try a sample**, then **Trace its references**. Ctrl+V matches the four cited papers batch by batch and shows where each one can be read for free.
 3. Ctrl+V then downloads every free copy it found (here, the open arXiv PDFs) and adds their full text to the evidence automatically. With an embeddings model set up, it also embeds everything in the background; the progress bar shows each stage.
 
-Or drop in a PDF: adding a file starts the whole pipeline on its own, from tracing references to downloading free copies and embedding them.
-4. Ask *"How does attention help with long sentences in translation?"*. The answer cites each passage with a source label and link.
+4. Ask *"How does attention help with long sentences in translation?"*. The answer cites numbered sources `[1]`, `[2]`, each with a source label and link.
 5. Ask *"Which sources are abstract-only?"* to see the access summary for the whole reference list.
+
+You can also drop in your own PDF: adding a file starts everything automatically — tracing references, downloading every legal free copy into tab memory, and embedding in the background.
 
 For AI-written answers instead of ranked passages, set up OpenRouter (below), or open **Sources & AI** and add any OpenAI-compatible embeddings and chat endpoint. A local Ollama server works without a key.
 
@@ -51,7 +59,7 @@ Demo video: _add link_
 3. The local server resolves reference metadata and checks for open locations. Add an Unpaywall email in **Sources & AI** for DOI-based Unpaywall lookups. A CORE key is optional.
 4. Review the citation map, source status, match confidence, version, and license when those details are available.
 5. Ctrl+V downloads every discovered free copy (PDF, XML, HTML or text) into the current tab, three at a time, trying up to three locations for each. A reference whose copy could not be read shows **Retry download**. Abstracts are available for retrieval as soon as metadata is found.
-6. In **Sources & AI**, optionally configure an OpenAI-compatible embeddings endpoint and model. Once free copies are downloaded, Ctrl+V embeds the current paper and reference text in memory in the background (128 passages per request), then uses semantic similarity plus citation-graph expansion. An optional chat model synthesizes the retrieved evidence; without one, Ctrl+V returns ranked passages.
+6. With free OpenRouter models set in `.env` (see `.env.example`), or any OpenAI-compatible endpoint under **Sources & AI**, Ctrl+V embeds the current paper and reference text in memory in the background (128 passages per request), then uses semantic similarity plus citation-graph expansion. An optional chat model synthesizes the retrieved evidence; without one, Ctrl+V returns ranked passages.
 
 ## GraphRAG approach
 
@@ -86,3 +94,7 @@ Discovery and indexing are best-effort. Providers can be unavailable, miss a rep
 - Citation matching is metadata-based and may need human confirmation.
 - Full-text indexing supports PDF, XML, HTML, and plain text; scanned PDFs, publisher anti-bot pages, and unstable repository links may fail.
 - The graph is currently one paper plus its direct references. The UI shows citation relationships, not proof that linked papers agree.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
