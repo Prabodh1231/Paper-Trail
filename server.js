@@ -16,6 +16,52 @@ const MIME = {
   '.svg': 'image/svg+xml',
 };
 
+// Server-side AI defaults from the git-ignored .env file. Read on each use so a key
+// added while the server is running takes effect without a restart. Process
+// environment variables take precedence. The key is never sent to the browser.
+const ENV_FILE = path.join(__dirname, '.env');
+const OPENROUTER_BASE = 'https://openrouter.ai/api/v1';
+
+function readEnvFile() {
+  try {
+    const values = {};
+    for (const line of fs.readFileSync(ENV_FILE, 'utf8').split(/\r?\n/)) {
+      const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/i);
+      if (match && !line.trim().startsWith('#')) values[match[1]] = match[2].replace(/^(['"])(.*)\1$/, '$2');
+    }
+    return values;
+  } catch {
+    return {};
+  }
+}
+
+function openRouterConfig() {
+  const file = readEnvFile();
+  const get = (name) => String(process.env[name] || file[name] || '').trim();
+  const key = get('OPENROUTER_API_KEY');
+  return {
+    key,
+    chatModel: key ? get('OPENROUTER_CHAT_MODEL') : '',
+    embeddingModel: key ? get('OPENROUTER_EMBEDDING_MODEL') : '',
+    rerankModel: key ? get('OPENROUTER_RERANK_MODEL') : '',
+  };
+}
+
+// OpenRouter answers a bad key with "Missing Authentication header", which reads
+// like a code bug. Turn auth and rate-limit failures into actionable messages.
+function providerError(endpoint, status, data, fallback) {
+  if (String(endpoint).startsWith(OPENROUTER_BASE)) {
+    if (status === 401) return new Error('OpenRouter rejected the API key. Check OPENROUTER_API_KEY in .env.');
+    if (status === 402) return new Error('OpenRouter reports a negative balance, which also blocks free models.');
+    if (status === 429) return new Error('OpenRouter free-model rate limit reached (20 per minute, 50 or 1,000 per day). Try again later.');
+  }
+  return new Error(data.error?.message || fallback);
+}
+
+function openRouterHeaders(key) {
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${key}`, 'X-Title': 'Ctrl+V Research Access' };
+}
+
 function sendJson(res, status, data) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -621,7 +667,16 @@ async function proxyDocument(rawUrl) {
 async function answerQuestion(input) {
   const question = String(input.question || '').trim();
   const evidence = Array.isArray(input.evidence) ? input.evidence.slice(0, 12) : [];
-  const model = input.model || {};
+  let model = input.model || {};
+  let headers = { 'Content-Type': 'application/json', ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}) };
+  if (!(model.model && (model.apiKey || model.baseUrl))) {
+    // No model set in the browser: fall back to the OpenRouter default from .env.
+    const openRouter = openRouterConfig();
+    if (openRouter.chatModel) {
+      model = { model: openRouter.chatModel, baseUrl: OPENROUTER_BASE };
+      headers = openRouterHeaders(openRouter.key);
+    }
+  }
   if (model.model && (model.apiKey || model.baseUrl)) {
     const base = String(model.baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
     const endpoint = base.endsWith('/chat/completions') ? base : `${base}/chat/completions`;
@@ -631,7 +686,7 @@ async function answerQuestion(input) {
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}) },
+        headers,
         body: JSON.stringify({
           model: model.model,
           temperature: 0.15,
@@ -643,8 +698,9 @@ async function answerQuestion(input) {
         signal: controller.signal,
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error?.message || `Model endpoint returned HTTP ${response.status}.`);
-      return { answer: data.choices?.[0]?.message?.content || 'The model returned no answer.', mode: 'model', model: model.model };
+      if (!response.ok) throw providerError(endpoint, response.status, data, `Model endpoint returned HTTP ${response.status}.`);
+      // openrouter/free routes to whichever free model is available; report the one that answered.
+      return { answer: data.choices?.[0]?.message?.content || 'The model returned no answer.', mode: 'model', model: data.model || model.model };
     } finally {
       clearTimeout(timer);
     }
@@ -658,30 +714,83 @@ async function answerQuestion(input) {
   };
 }
 
+// Returns { vectors, model }. With the OpenRouter default, OPENROUTER_EMBEDDING_MODEL may
+// list several comma-separated models; they are tried in order, because free models
+// are sometimes down. The model that answered is returned so the browser never
+// compares vectors from different models.
 async function embedTexts(input) {
   const texts = Array.isArray(input.texts) ? input.texts.slice(0, 48).map((text) => String(text || '').slice(0, 12000)) : [];
-  const model = String(input.model || '').trim();
-  const base = String(input.baseUrl || '').trim().replace(/\/+$/, '');
-  const apiKey = String(input.apiKey || '').trim();
-  if (!texts.length || !model || !base) throw new Error('Set an embeddings API base and model in Sources & AI.');
+  let models = [String(input.model || '').trim()];
+  let base = String(input.baseUrl || '').trim().replace(/\/+$/, '');
+  let apiKey = String(input.apiKey || '').trim();
+  if (!models[0] || !base) {
+    // No embeddings endpoint set in the browser: fall back to the OpenRouter default from .env.
+    const openRouter = openRouterConfig();
+    if (openRouter.embeddingModel) {
+      models = openRouter.embeddingModel.split(',').map((model) => model.trim()).filter(Boolean);
+      base = OPENROUTER_BASE;
+      apiKey = openRouter.key;
+    }
+  }
+  if (!texts.length || !models[0] || !base) throw new Error('Set an embeddings API base and model in Sources & AI, or add an OpenRouter key to .env.');
   if (texts.some((text) => !text.trim())) throw new Error('Embedding input cannot be empty.');
   const endpoint = base.endsWith('/embeddings') ? base : `${base}/embeddings`;
+  let lastError;
+  for (const model of models) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 55000);
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
+        body: JSON.stringify({ model, input: texts }),
+        signal: controller.signal,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        lastError = providerError(endpoint, response.status, data, `Embeddings endpoint returned HTTP ${response.status}.`);
+        // A bad key or exhausted quota fails the same way for every model, so stop early.
+        if ([401, 402, 429].includes(response.status)) throw lastError;
+        continue;
+      }
+      const vectors = (data.data || []).sort((a, b) => (a.index || 0) - (b.index || 0)).map((item) => item.embedding);
+      if (vectors.length !== texts.length || vectors.some((vector) => !Array.isArray(vector) || !vector.length)) {
+        lastError = new Error('The embeddings endpoint returned an unexpected response. Expected one vector per input text.');
+        continue;
+      }
+      return { vectors, model };
+    } catch (error) {
+      if (error === lastError) throw error;
+      lastError = error.name === 'AbortError' ? new Error(`Embedding model ${model} timed out.`) : error;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw lastError || new Error('No embedding model answered.');
+}
+
+// Rerank candidate passages with the OpenRouter rerank model from .env.
+// Returns [{ index, score }] in the order of the input documents' relevance.
+async function rerankTexts(input) {
+  const openRouter = openRouterConfig();
+  if (!openRouter.rerankModel) throw new Error('No rerank model is configured.');
+  const query = String(input.query || '').trim().slice(0, 2000);
+  const documents = Array.isArray(input.documents) ? input.documents.slice(0, 40).map((text) => String(text || '').slice(0, 4000)) : [];
+  if (!query || !documents.length) throw new Error('Rerank needs a query and at least one document.');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 55000);
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(`${OPENROUTER_BASE}/rerank`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
-      body: JSON.stringify({ model, input: texts }),
+      headers: openRouterHeaders(openRouter.key),
+      body: JSON.stringify({ model: openRouter.rerankModel, query, documents, top_n: documents.length }),
       signal: controller.signal,
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error?.message || `Embeddings endpoint returned HTTP ${response.status}.`);
-    const vectors = (data.data || []).sort((a, b) => (a.index || 0) - (b.index || 0)).map((item) => item.embedding);
-    if (vectors.length !== texts.length || vectors.some((vector) => !Array.isArray(vector) || !vector.length)) {
-      throw new Error('The embeddings endpoint returned an unexpected response. Expected one vector per input text.');
-    }
-    return vectors;
+    if (!response.ok) throw providerError(`${OPENROUTER_BASE}/rerank`, response.status, data, `Rerank endpoint returned HTTP ${response.status}.`);
+    const results = (data.results || []).filter((item) => Number.isInteger(item.index) && item.index < documents.length);
+    if (!results.length) throw new Error('The rerank endpoint returned no results.');
+    return results.map((item) => ({ index: item.index, score: Number(item.relevance_score) || 0 }));
   } finally {
     clearTimeout(timer);
   }
@@ -689,6 +798,24 @@ async function embedTexts(input) {
 
 async function handleApi(req, res, pathname) {
   if (pathname === '/api/health' && req.method === 'GET') return sendJson(res, 200, { ok: true, name: 'Ctrl+V Research Access' });
+
+  if (pathname === '/api/config' && req.method === 'GET') {
+    // Model names only; the key itself never leaves the server.
+    const openRouter = openRouterConfig();
+    return sendJson(res, 200, {
+      serverAI: {
+        provider: openRouter.key ? 'OpenRouter' : null,
+        chat: openRouter.chatModel || null,
+        embeddings: openRouter.embeddingModel || null,
+        rerank: openRouter.rerankModel || null,
+      },
+    });
+  }
+
+  if (pathname === '/api/rerank' && req.method === 'POST') {
+    const body = await readBody(req, 200 * 1024);
+    return sendJson(res, 200, { results: await rerankTexts(body) });
+  }
 
   if (pathname === '/api/resolve' && req.method === 'POST') {
     const body = await readBody(req);
@@ -798,8 +925,7 @@ async function handleApi(req, res, pathname) {
 
   if (pathname === '/api/embeddings' && req.method === 'POST') {
     const body = await readBody(req, 650 * 1024);
-    const vectors = await embedTexts(body);
-    return sendJson(res, 200, { vectors });
+    return sendJson(res, 200, await embedTexts(body));
   }
 
   return sendJson(res, 404, { error: 'Unknown API route.' });

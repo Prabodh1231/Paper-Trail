@@ -11,9 +11,33 @@ const state = {
   activeFileName: '',
   pdfjs: null,
   embeddingCache: new Map(),
+  serverAI: { provider: null, chat: null, embeddings: null, rerank: null },
+  rerankWarned: false,
 };
 
 const demoText = `Demo reading notes\n\nThis short, original demo summary describes a sequence modeling paper that proposes a Transformer architecture based on attention, with encoder and decoder stacks built from self-attention and feed-forward layers. It reports that this design can be trained in parallel and compares favorably with recurrent and convolutional sequence models on translation tasks. These notes are included only to demonstrate the reading workflow; they are not the paper's full text.\n\nReferences\n[1] Bahdanau, D., Cho, K., and Bengio, Y. Neural Machine Translation by Jointly Learning to Align and Translate. 2014. DOI: 10.48550/arXiv.1409.0473\n[2] Sutskever, I., Vinyals, O., and Le, Q. V. Sequence to Sequence Learning with Neural Networks. 2014. DOI: 10.48550/arXiv.1409.3215\n[3] Hochreiter, S. and Schmidhuber, J. Long Short-Term Memory. Neural Computation, 1997. DOI: 10.1162/neco.1997.9.8.1735\n[4] Cho, K. et al. Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation. 2014. DOI: 10.3115/v1/D14-1179`;
+
+// AI comes from Sources & AI when filled in, otherwise from the server's .env defaults.
+function usesOwnEmbeddings() { return Boolean(state.settings.embeddingModel && state.settings.embeddingBase); }
+function hasEmbeddings() { return usesOwnEmbeddings() || Boolean(state.serverAI.embeddings); }
+function hasChatModel() { return Boolean((state.settings.model && (state.settings.modelKey || state.settings.baseUrl)) || state.serverAI.chat); }
+function hasReranker() { return Boolean(state.serverAI.rerank); }
+
+async function loadServerConfig() {
+  try {
+    const response = await fetch('/api/config', { cache: 'no-store' });
+    if (response.ok) state.serverAI = { ...state.serverAI, ...(await response.json()).serverAI };
+  } catch {
+    // Server defaults are optional; the app works without them.
+  }
+  const note = $('#serverAiNote');
+  if (note) {
+    const parts = [state.serverAI.chat && `answers: ${state.serverAI.chat}`, state.serverAI.embeddings && `embeddings: ${state.serverAI.embeddings}`, state.serverAI.rerank && `rerank: ${state.serverAI.rerank}`].filter(Boolean);
+    note.textContent = parts.length ? `Server default (${state.serverAI.provider}, from .env): ${parts.join(' · ')}. Fields below override it for this tab.` : '';
+    note.classList.toggle('hidden', !parts.length);
+  }
+  updateEvidenceControls();
+}
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -324,9 +348,8 @@ function updateEvidenceControls() {
   $('#sendQuestion').disabled = !hasAny;
   const sourceCount = state.documents.filter((document) => document.type !== 'seed').length + (state.documents.some((document) => document.type === 'seed') ? 1 : 0);
   $('#evidenceCount').textContent = `${sourceCount} source${sourceCount === 1 ? '' : 's'} indexed · ${Math.round(totalChars / 1000)}k chars`;
-  const hasEmbeddings = state.settings.embeddingModel && state.settings.embeddingBase;
-  const hasChatModel = state.settings.model && (state.settings.modelKey || state.settings.baseUrl);
-  $('#answerMode').textContent = hasEmbeddings ? (hasChatModel ? 'GraphRAG + AI' : 'Semantic GraphRAG') : (hasChatModel ? 'LLM + lexical graph' : 'Lexical graph search');
+  const rerank = hasReranker() ? ' + rerank' : '';
+  $('#answerMode').textContent = hasEmbeddings() ? (hasChatModel() ? `GraphRAG${rerank} + AI` : `Semantic GraphRAG${rerank}`) : (hasChatModel() ? `LLM + lexical graph${rerank}` : `Lexical graph search${rerank}`);
 }
 
 function showWorkspace() {
@@ -633,22 +656,43 @@ function expandThroughCitationGraph(scored) {
     url: item.document.url,
     accessLabel: item.document.accessLabel,
     relationship: item.relation,
+    reranked: Boolean(item.reranked),
     text: item.text,
     score: item.score,
   }));
 }
 
-function rankEvidence(question) {
+async function rankEvidence(question) {
   const terms = tokenize(question);
   const scored = collectPassages().map((passage) => ({
     ...passage,
     score: lexicalScore(passage.text, terms, question),
-  })).filter((item) => item.score > 0);
-  return expandThroughCitationGraph(scored);
+  })).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
+  return expandThroughCitationGraph(await rerankCandidates(question, scored));
+}
+
+// Second-stage ranking: a rerank model rescores the top candidates against the
+// question. The first-stage score is kept as a small tie-breaker. On any failure
+// the first-stage order is used unchanged.
+async function rerankCandidates(question, scored, limit = 30) {
+  if (!hasReranker() || scored.length < 2) return scored;
+  const candidates = scored.slice(0, limit);
+  try {
+    const { results } = await apiRequest('/api/rerank', { query: question, documents: candidates.map((item) => item.text) });
+    const relevance = new Map(results.map((item) => [item.index, item.score]));
+    return candidates
+      .map((item, index) => ({ ...item, score: (relevance.get(index) ?? 0) * 0.8 + item.score * 0.2, reranked: true }))
+      .sort((a, b) => b.score - a.score);
+  } catch (error) {
+    if (!state.rerankWarned) showToast(`Reranking unavailable; using first-stage ranking. ${error.message}`, 'error');
+    state.rerankWarned = true;
+    return scored;
+  }
 }
 
 function embeddingCacheKey(entry) {
-  return `${state.settings.embeddingBase}|${state.settings.embeddingModel}|${entry.document.id}|${entry.chunkIndex}|${fingerprint(entry.text)}`;
+  const source = usesOwnEmbeddings() ? `${state.settings.embeddingBase}|${state.settings.embeddingModel}` : `server|${state.serverAI.embeddings}`;
+  return `${source}|${entry.document.id}|${entry.chunkIndex}|${fingerprint(entry.text)}`;
 }
 
 function fingerprint(text) {
@@ -657,18 +701,23 @@ function fingerprint(text) {
   return `${text.length}-${(hash >>> 0).toString(36)}`;
 }
 
+// Returns { vectors, model }. Throws if batches came back from different models.
 async function requestEmbeddings(texts) {
   const vectors = [];
+  let model = null;
   for (let index = 0; index < texts.length; index += 32) {
     const result = await apiRequest('/api/embeddings', {
       texts: texts.slice(index, index + 32),
-      baseUrl: state.settings.embeddingBase,
-      model: state.settings.embeddingModel,
-      apiKey: state.settings.embeddingKey,
+      // Empty values make the server use its .env default.
+      baseUrl: usesOwnEmbeddings() ? state.settings.embeddingBase : '',
+      model: usesOwnEmbeddings() ? state.settings.embeddingModel : '',
+      apiKey: usesOwnEmbeddings() ? state.settings.embeddingKey : '',
     });
+    if (model && result.model && result.model !== model) throw new Error('Embedding batches used different models; try again.');
+    model = model || result.model || null;
     vectors.push(...result.vectors);
   }
-  return vectors;
+  return { vectors, model };
 }
 
 function cosineSimilarity(left, right) {
@@ -687,12 +736,20 @@ async function rankEvidenceSemantic(question) {
   if (!passages.length) return [];
   const entries = passages.map((passage) => ({ ...passage, cacheKey: embeddingCacheKey(passage) }));
   const missing = entries.filter((entry) => !state.embeddingCache.has(entry.cacheKey));
-  for (let index = 0; index < missing.length; index += 32) {
-    const batch = missing.slice(index, index + 32);
-    const vectors = await requestEmbeddings(batch.map((entry) => entry.text));
-    batch.forEach((entry, vectorIndex) => state.embeddingCache.set(entry.cacheKey, vectors[vectorIndex]));
+  // The question rides along with the passages so a first question costs one fewer
+  // request, which matters on rate-limited free tiers.
+  let { vectors, model } = await requestEmbeddings([...missing.map((entry) => entry.text), question]);
+  if (state.embeddingModelUsed && model && model !== state.embeddingModelUsed && missing.length < entries.length) {
+    // A fallback model answered this time; vectors from different models are not
+    // comparable, so re-embed everything with the model now in use.
+    state.embeddingCache.clear();
+    ({ vectors, model } = await requestEmbeddings([...entries.map((entry) => entry.text), question]));
+    entries.forEach((entry, vectorIndex) => state.embeddingCache.set(entry.cacheKey, vectors[vectorIndex]));
+  } else {
+    missing.forEach((entry, vectorIndex) => state.embeddingCache.set(entry.cacheKey, vectors[vectorIndex]));
   }
-  const queryVector = (await requestEmbeddings([question]))[0];
+  state.embeddingModelUsed = model || state.embeddingModelUsed;
+  const queryVector = vectors.at(-1);
   const terms = tokenize(question);
   const scored = entries.map((entry) => {
     const semantic = cosineSimilarity(queryVector, state.embeddingCache.get(entry.cacheKey));
@@ -701,7 +758,7 @@ async function rankEvidenceSemantic(question) {
   }).sort((a, b) => b.score - a.score);
   if (!scored.length || scored[0].score < .12) return [];
   const floor = Math.max(.08, scored[0].score * .44);
-  return expandThroughCitationGraph(scored.filter((item) => item.score >= floor));
+  return expandThroughCitationGraph(await rerankCandidates(question, scored.filter((item) => item.score >= floor)));
 }
 
 function renderAnswerText(text) {
@@ -747,12 +804,12 @@ async function askQuestion(question) {
         relationship: 'citation graph access record',
         text: `Access status: ${accessLabel(reference)}. Matching sources: ${(reference.providers || []).join(', ') || 'none confirmed'}. ${reference.locations?.[0]?.license ? `Reported license: ${reference.locations[0].license}.` : 'No license was reported by the discovery record.'}`,
       }));
-    } else if (state.settings.embeddingModel && state.settings.embeddingBase) {
+    } else if (hasEmbeddings()) {
       retrievalMode = 'semantic';
       try {
         evidence = await rankEvidenceSemantic(query);
         if (!evidence.length) {
-          const lexical = rankEvidence(query);
+          const lexical = await rankEvidence(query);
           if (lexical.length) {
             evidence = lexical;
             retrievalMode = 'lexical';
@@ -760,11 +817,11 @@ async function askQuestion(question) {
         }
       } catch (error) {
         retrievalMode = 'lexical';
-        evidence = rankEvidence(query);
+        evidence = await rankEvidence(query);
         showToast(`Embeddings unavailable; using lexical retrieval. ${error.message}`, 'error');
       }
     } else {
-      evidence = rankEvidence(query);
+      evidence = await rankEvidence(query);
     }
     const result = await apiRequest('/api/answer', {
       question: query,
@@ -783,6 +840,7 @@ async function askQuestion(question) {
     $('#answerMode').textContent = result.mode === 'model'
       ? (retrievalMode === 'semantic' ? 'GraphRAG + AI' : retrievalMode === 'metadata' ? 'Access metadata + AI' : 'LLM + lexical graph')
       : (retrievalMode === 'semantic' ? 'Semantic GraphRAG' : retrievalMode === 'metadata' ? 'Access metadata' : 'Lexical graph search');
+    if (retrievalMode !== 'metadata' && evidence.some((item) => item.reranked)) $('#answerMode').textContent += ' + rerank';
   } catch (error) {
     const item = $(`#${loadingId}`);
     if (item) item.outerHTML = `<div class="assistant-message"><span class="assistant-avatar">!</span><div><strong>Could not complete the answer</strong><p>${escapeHtml(error.message)}</p></div></div>`;
@@ -900,6 +958,7 @@ function bindEvents() {
 
 bindEvents();
 updateEvidenceControls();
+loadServerConfig();
 let graphResizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(graphResizeTimer);

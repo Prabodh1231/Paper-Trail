@@ -23,7 +23,22 @@ The app uses Node's built-in libraries and does not need `npm install`. Set `$en
 4. Ask *"How does attention help with long sentences in translation?"*. The answer cites each passage with a source label and link.
 5. Ask *"Which sources are abstract-only?"* to see the access summary for the whole reference list.
 
-For AI-written answers instead of ranked passages, open **Sources & AI** and add an OpenAI-compatible embeddings and chat endpoint. A local Ollama server works without a key.
+For AI-written answers instead of ranked passages, set up OpenRouter (below), or open **Sources & AI** and add any OpenAI-compatible embeddings and chat endpoint. A local Ollama server works without a key.
+
+## Free AI with OpenRouter
+
+1. Copy `.env.example` to `.env` (it is git-ignored) and paste a key from <https://openrouter.ai/keys> after `OPENROUTER_API_KEY=`.
+2. Start or reload the app. No restart is needed; the server reads `.env` on each request.
+
+The defaults are all free models:
+
+- **Answers:** `openrouter/free`, which routes to whichever free chat model is available. The answer heading names the model that replied.
+- **Embeddings:** `nvidia/nemotron-3.5-embed-8b:free`, falling back to `nvidia/nemotron-3-embed-1b:free` and then `nvidia/nemotron-3.5-embed-1b:free` when a model is down. List models comma-separated in `OPENROUTER_EMBEDDING_MODEL`; if a different model answers, Ctrl+V re-embeds the sources so vectors are never mixed.
+- **Reranking:** `nvidia/nemotron-3.5-rerank-8b:free` rescores the top 30 retrieved passages before citation-graph expansion. Leave `OPENROUTER_RERANK_MODEL` empty to skip it; if reranking fails, the first-stage ranking is used.
+
+Free models change over time, so update the names in `.env` if one is retired.
+
+The key stays on the local server and is never sent to the browser. Anything filled in under **Sources & AI** overrides these defaults for that tab. Free OpenRouter models allow 50 requests a day for accounts that have never bought credits (1,000 a day after buying at least 10 credits), and a question uses about 2–4 requests. Some free providers may keep prompts for training; Ctrl+V sends them only public paper text and your question.
 
 Demo video: _add link_
 

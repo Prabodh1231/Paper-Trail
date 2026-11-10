@@ -198,6 +198,7 @@
     <form method="dialog" class="settings-card" id="settingsForm">
       <div class="settings-head"><div><div class="section-kicker">CONNECT YOUR SOURCES</div><h2>Settings</h2></div><button class="icon-button close-dialog" type="button" id="closeSettings" aria-label="Close settings">×</button></div>
       <p class="settings-description">Credentials stay in this tab and are used only for requests to the configured APIs. When enabled, paper chunks go to the embeddings endpoint and retrieved excerpts go to the chat model.</p>
+      <p id="serverAiNote" class="field-help server-ai-note hidden"></p>
       <div class="settings-section-title">Open access discovery</div>
       <label class="field-row" for="unpaywallEmail"><span class="field-label">Unpaywall contact email</span><input id="unpaywallEmail" class="text-field" type="email" placeholder="name@university.edu" autocomplete="off"><span class="field-help">Required by Unpaywall’s free DOI lookup API.</span></label>
       <label class="field-row" for="coreApiKey"><span class="field-label">CORE API key <span>optional</span></span><input id="coreApiKey" class="text-field" type="password" placeholder="Paste key to enable CORE fallback" autocomplete="new-password"><span class="field-help">CORE offers a limited free tier; check its terms for your use.</span></label>
