@@ -460,7 +460,7 @@ async function explorePaper(){
         ? 'No reference list was found in the text and the citation services returned no reference records. Paste the bibliography or try another paper.'
         : 'No reference list was detected. Paste the bibliography section or add a paper DOI to discover citations.';
       $('#noticeBar').classList.remove('hidden');
-      welcomeMessage('<p>Ctrl+V could not find references yet. Go back and paste the bibliography section or enter a DOI.</p>');
+      welcomeMessage('<p>Paper Trail could not find references yet. Go back and paste the bibliography section or enter a DOI.</p>');
       renderReferences();
     }
   }catch (err){

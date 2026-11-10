@@ -5,7 +5,7 @@ const dns = require('node:dns').promises;
 const net = require('node:net');
 
 const ROOT = path.join(__dirname, 'public');
-const PORT = Number(process.env.CTRL_V_PORT || 8787);
+const PORT = Number(process.env.PAPER_TRAIL_PORT || process.env.CTRL_V_PORT || 8787);
 const MAX_BODY = 3 * 1024 * 1024;
 const MAX_DOCUMENT = 18 * 1024 * 1024;
 const MIME = {
@@ -59,7 +59,7 @@ function providerError(endpoint, status, data, fallback) {
 }
 
 function openRouterHeaders(key) {
-  return { 'Content-Type': 'application/json', Authorization: `Bearer ${key}`, 'X-Title': 'Ctrl+V Research Access' };
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${key}`, 'X-Title': 'Paper Trail' };
 }
 
 function sendJson(res, status, data) {
@@ -146,7 +146,7 @@ async function fetchJson(url, headers = {}, timeoutMs = 8500) {
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, {
-      headers: { Accept: 'application/json', 'User-Agent': 'CtrlV-Research-Access/0.1 (local prototype)', ...headers },
+      headers: { Accept: 'application/json', 'User-Agent': 'PaperTrail-Research-Access/0.1 (local prototype)', ...headers },
       signal: controller.signal,
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -161,7 +161,7 @@ async function fetchText(url, timeoutMs = 8500) {
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, {
-      headers: { Accept: 'application/atom+xml,application/xml,text/xml,text/plain,*/*;q=0.5', 'User-Agent': 'CtrlV-Research-Access/0.1 (local prototype)' },
+      headers: { Accept: 'application/atom+xml,application/xml,text/xml,text/plain,*/*;q=0.5', 'User-Agent': 'PaperTrail-Research-Access/0.1 (local prototype)' },
       signal: controller.signal,
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -627,7 +627,7 @@ async function proxyDocument(rawUrl) {
     try {
       response = await fetch(url, {
         redirect: 'manual',
-        headers: { 'User-Agent': 'CtrlV-Research-Access/0.1 (user-requested OA document retrieval)', Accept: 'application/pdf,application/xml,text/xml,text/plain,text/html;q=0.8,*/*;q=0.2' },
+        headers: { 'User-Agent': 'PaperTrail-Research-Access/0.1 (user-requested OA document retrieval)', Accept: 'application/pdf,application/xml,text/xml,text/plain,text/html;q=0.8,*/*;q=0.2' },
         signal: controller.signal,
       });
     } finally {
@@ -799,7 +799,7 @@ async function rerankTexts(input) {
 }
 
 async function handleApi(req, res, pathname) {
-  if (pathname === '/api/health' && req.method === 'GET') return sendJson(res, 200, { ok: true, name: 'Ctrl+V Research Access' });
+  if (pathname === '/api/health' && req.method === 'GET') return sendJson(res, 200, { ok: true, name: 'Paper Trail' });
 
   if (pathname === '/api/config' && req.method === 'GET') {
     // Model names only; the key itself never leaves the server.
@@ -968,6 +968,6 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Ctrl+V is ready at http://127.0.0.1:${PORT}`);
+  console.log(`Paper Trail is ready at http://127.0.0.1:${PORT}`);
   console.log('Local server; model and contact credentials are used only for individual requests.');
 });
