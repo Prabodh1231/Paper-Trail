@@ -5,262 +5,201 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="description" content="Ctrl+V — a local-first reading room for following a paper's references, finding open copies, and asking cited questions.">
-  <title>Ctrl+V — Open research reading room</title>
+  <title>Ctrl+V — The open reading room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
 
-  <header class="appbar">
-    <button type="button" class="brand" id="brandHome" aria-label="Ctrl+V — return to bringing in a paper">
-      <span class="brand-glyph" aria-hidden="true">
-        <svg viewBox="0 0 32 32"><rect x="3" y="3" width="18" height="22" rx="2"/><path d="M7 9h9M7 13h9M7 17h6"/><rect x="15" y="11" width="14" height="18" rx="2"/><path d="M19 17h6M19 21h6"/></svg>
-      </span>
-      <span class="brand-word">ctrl<em>+</em>v</span>
-      <span class="brand-sub">reading room</span>
-    </button>
-
-    <ol class="journey" aria-label="Reading room journey">
-      <li data-step="0" aria-current="step"><span aria-hidden="true">1</span><b>Bring in</b></li>
-      <li data-step="1"><span aria-hidden="true">2</span><b>Trace references</b></li>
-      <li data-step="2"><span aria-hidden="true">3</span><b>Read &amp; ask</b></li>
-    </ol>
-
-    <div class="appbar-actions">
-      <p class="local-state"><span aria-hidden="true"></span>Local · this tab only</p>
-      <button type="button" class="btn btn-quiet open-settings" id="settingsTop">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a7.8 7.8 0 0 0 0-6l1.5-1.2-1.6-2.6-1.8.7a8 8 0 0 0-5-1.5L11.8 2.6h-3l-.7 1.8a8 8 0 0 0-5 1.5l-1.8-.7L-.3 7.8 1.2 9a7.8 7.8 0 0 0 0 6l-1.5 1.2 1.6 2.6 1.8-.7a8 8 0 0 0 5 1.5l.7 1.8h3l.7-1.8a8 8 0 0 0 5-1.5l1.8.7 1.6-2.6Z" transform="translate(2 0) scale(.86)"/></svg>
-        Sources &amp; AI
+  <header class="masthead">
+    <div class="masthead-inner">
+      <button type="button" class="brand" id="brandHome" aria-label="Ctrl+V — return to bringing in a paper">
+        <span class="brand-word">ctrl<em>+</em>v</span>
+        <span class="brand-sub">The open reading room</span>
       </button>
+      <nav class="masthead-nav" aria-label="Primary">
+        <p class="local-state"><span aria-hidden="true"></span>Local · this tab only</p>
+        <button type="button" class="btn btn-quiet open-settings" id="settingsTop">Sources &amp; AI</button>
+      </nav>
     </div>
   </header>
 
   <main id="main" class="main" tabindex="-1">
 
-    <!-- ================= STAGE 1 : INTAKE ================= -->
-    <section id="intakeView" aria-labelledby="intakeTitle">
-      <div class="intake-layout">
+    <!-- ================= INTAKE ================= -->
+    <section id="intakeView" class="page" aria-labelledby="intakeTitle">
+      <div class="intake">
         <div class="intake-story">
-          <p class="eyebrow">Stage 1 — Bring in a paper</p>
+          <p class="kicker">Open literature, made readable</p>
           <h1 id="intakeTitle">Start with one paper.<br><em>Leave with its whole trail.</em></h1>
-          <p class="lede">Ctrl+V reads the bibliography, checks every reference against open scholarly records, shows where each one can actually be read, and lets you ask questions answered only from evidence you can open.</p>
+          <p class="lede">Ctrl+V reads the bibliography, finds where every reference can be read legally and for free, downloads those copies, and answers your questions only from evidence you can open yourself.</p>
 
-          <ol class="how" aria-label="What happens next">
-            <li><span aria-hidden="true">01</span><div><strong>References are extracted here</strong><p>PDF text is parsed in your browser. Nothing is uploaded as a file.</p></div></li>
-            <li><span aria-hidden="true">02</span><div><strong>Each reference is resolved progressively</strong><p>Matches, confidence, providers and free locations appear in batches of three.</p></div></li>
-            <li><span aria-hidden="true">03</span><div><strong>You index what you want to question</strong><p>Open copies are fetched through the local proxy only when you choose them.</p></div></li>
+          <ol class="how" aria-label="What happens after you add a paper">
+            <li><span class="how-num" aria-hidden="true">i.</span><div><strong>The references are traced.</strong> PDF text is read in your browser; each reference is matched against open scholarly records.</div></li>
+            <li><span class="how-num" aria-hidden="true">ii.</span><div><strong>Free copies are fetched.</strong> Every legal open copy is downloaded into this tab’s memory — never to disk.</div></li>
+            <li><span class="how-num" aria-hidden="true">iii.</span><div><strong>You ask; it cites.</strong> Answers draw only on the paper, its open references and their abstracts, with every claim numbered to a source.</div></li>
           </ol>
 
           <p class="server-note" id="serverAiSummary">Checking for server-configured AI…</p>
-          <p class="providers"><span>Discovery via</span>Crossref · OpenAlex · Semantic Scholar · Unpaywall · DataCite · OpenCitations · CORE · OpenAIRE · Europe PMC · arXiv</p>
+          <p class="providers"><span>Discovery via</span> Crossref · OpenAlex · Semantic Scholar · Unpaywall · DataCite · OpenCitations · CORE · OpenAIRE · Europe PMC · arXiv</p>
         </div>
 
-        <section class="panel intake-panel" aria-labelledby="intakePanelTitle">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Your paper</p>
-              <h2 id="intakePanelTitle">Add the seed paper</h2>
-            </div>
-            <button type="button" class="btn btn-quiet" id="sampleButton">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8Z"/></svg>
-              Try a sample
-            </button>
+        <section class="submission" aria-labelledby="intakePanelTitle">
+          <div class="submission-head">
+            <h2 id="intakePanelTitle">Add the seed paper</h2>
+            <button type="button" class="btn btn-quiet" id="sampleButton">Try a sample</button>
           </div>
 
           <label class="dropzone" id="dropZone" for="paperFile">
             <input id="paperFile" type="file" accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown">
             <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V5m0 0L7.8 9.2M12 5l4.2 4.2"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></svg></span>
-            <strong id="uploadLabel">Drop a PDF, TXT or Markdown file — or browse</strong>
-            <span>Selectable-text PDFs only; scanned files need OCR elsewhere.</span>
+            <strong id="uploadLabel">Drop a PDF here, or browse</strong>
+            <span>Adding a file starts everything. Selectable-text PDF, TXT or Markdown.</span>
           </label>
 
-          <div class="field-row">
-            <div class="field">
-              <label for="paperTitle">Paper title</label>
-              <input id="paperTitle" type="text" placeholder="Paste a title, or let the file suggest one" autocomplete="off">
-            </div>
-            <div class="field">
-              <label for="paperDoi">DOI <span class="optional">optional, unlocks citation discovery</span></label>
-              <input id="paperDoi" type="text" placeholder="10.1234/example" autocomplete="off" spellcheck="false">
-            </div>
-          </div>
+          <p class="or-rule"><span>or enter the details</span></p>
 
           <div class="field">
-            <label for="paperText">Paper text or abstract <span class="optional">include the reference section to build the trail</span></label>
-            <textarea id="paperText" rows="9" placeholder="Paste paper text here. A clearly labelled, numbered bibliography works best."></textarea>
+            <label for="paperTitle">Title</label>
+            <input id="paperTitle" type="text" placeholder="Attention Is All You Need" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="paperDoi">DOI <span class="optional">optional — unlocks citation discovery</span></label>
+            <input id="paperDoi" type="text" placeholder="10.1234/example" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="field">
+            <label for="paperText">Paper text or abstract <span class="optional">include the references to build the trail</span></label>
+            <textarea id="paperText" rows="6" placeholder="Paste the paper text. A numbered bibliography works best."></textarea>
           </div>
 
-          <div class="intake-actions">
-            <p class="privacy">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 20 7v5.1c0 4.3-3.1 7.2-8 8.9-4.9-1.7-8-4.6-8-8.9V7Z"/><path d="m8.6 12 2.2 2.2 4.6-4.9"/></svg>
-              Parsed and held in this tab’s memory. Not written to disk by this app.
-            </p>
-            <button type="button" class="btn btn-primary btn-large" id="exploreButton">
-              Trace its references
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>
-            </button>
+          <div class="submission-actions">
+            <p class="privacy">Held in this tab’s memory. Nothing is written to disk.</p>
+            <button type="button" class="btn btn-primary btn-large" id="exploreButton">Trace its references</button>
           </div>
         </section>
       </div>
     </section>
 
-    <!-- ================= STAGES 2–3 : THREE-PANE WORKSPACE ================= -->
-    <section id="workspaceView" class="hidden" aria-labelledby="workspaceTitle">
-      <div class="dossier">
-        <button type="button" class="btn btn-icon" id="backButton" aria-label="Back to bringing in a paper">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5-6 6.5 6 6.5"/></svg>
-        </button>
-        <div class="dossier-text">
-          <p class="eyebrow">Seed paper · Stages 2–3</p>
-          <h1 id="workspaceTitle">Research paper</h1>
-          <p class="meta" id="workspaceMeta"></p>
-        </div>
-        <div class="dossier-actions">
-          <button type="button" class="btn btn-secondary hidden" id="seedIndexButton">Index main free copy</button>
-          <button type="button" class="btn btn-secondary" id="addPaperButton">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-            New paper
-          </button>
-        </div>
-      </div>
-
-      <div id="noticeBar" class="notice hidden" role="status"></div>
-
-      <div id="progressWrap" class="progress-wrap hidden">
-        <div class="progress-track" role="progressbar" aria-label="Preparation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
-          <span id="progressFill"></span>
-        </div>
-        <p id="progressText" aria-live="polite">Preparing…</p>
-      </div>
-
-      <div class="workspace">
-
-        <!-- LEFT PANE : NAVIGATOR -->
-        <aside class="pane pane-nav" aria-labelledby="navHeading">
-          <p class="eyebrow">Navigator</p>
-          <h2 id="navHeading" class="pane-title">The trail at a glance</h2>
-
-          <section class="access-box" aria-labelledby="accessHeading">
-            <h3 id="accessHeading">Reading access</h3>
-            <div class="meter" role="img" aria-label="Share of references with readable material" id="accessMeter"><span id="accessMeterFill"></span></div>
-            <dl class="stats">
-              <div><dd id="summaryFull">0</dd><dt>Full text</dt></div>
-              <div><dd id="summaryAbstract">0</dd><dt>Abstracts</dt></div>
-              <div><dd id="summaryUnavailable">0</dd><dt>Unavailable</dt></div>
-            </dl>
-            <p id="accessSummaryNote" class="muted">Checking free-to-read locations for each reference.</p>
-          </section>
-
-          <div class="field">
-            <label for="refSearch">Find within references</label>
-            <input id="refSearch" type="search" placeholder="Title, author or DOI" autocomplete="off">
+    <!-- ================= WORKSPACE ================= -->
+    <section id="workspaceView" class="page hidden" aria-labelledby="workspaceTitle">
+      <div class="spread">
+        <article class="column">
+          <div class="column-tools">
+            <button type="button" class="btn btn-link" id="backButton" aria-label="Back to adding a paper">← Add paper</button>
+            <div class="column-tools-right">
+              <button type="button" class="btn btn-quiet hidden" id="seedIndexButton">Download the paper’s free copy</button>
+              <button type="button" class="btn btn-quiet" id="addPaperButton">New paper</button>
+            </div>
           </div>
 
+          <p class="kicker">Seed paper</p>
+          <h1 id="workspaceTitle">Research paper</h1>
+          <p class="byline" id="workspaceMeta"></p>
+
+          <div class="status-rule" aria-label="Reading access">
+            <dl class="status-stats">
+              <div><dt>Full text</dt><dd id="summaryFull">0</dd></div>
+              <div><dt>Abstracts</dt><dd id="summaryAbstract">0</dd></div>
+              <div><dt>Unavailable</dt><dd id="summaryUnavailable">0</dd></div>
+            </dl>
+            <div class="meter" role="img" aria-label="Share of references with readable material" id="accessMeter"><span id="accessMeterFill"></span></div>
+            <p id="accessSummaryNote" class="status-note">Checking free-to-read locations for each reference.</p>
+          </div>
+
+          <div id="progressWrap" class="progress hidden">
+            <div class="progress-track" role="progressbar" aria-label="Preparation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar"><span id="progressFill"></span></div>
+            <p id="progressText" aria-live="polite">Preparing…</p>
+          </div>
+
+          <div id="noticeBar" class="notice hidden" role="status"></div>
+
+          <section class="discussion" aria-labelledby="askHeading">
+            <h2 id="askHeading" class="section-label">Questions &amp; answers</h2>
+            <div id="chatMessages" class="messages" aria-live="polite"></div>
+
+            <div class="suggestions" id="suggestedQuestions">
+              <span class="suggestions-label">Try</span>
+              <button type="button" class="suggestion">What ideas connect these papers?</button>
+              <button type="button" class="suggestion">Which sources are abstract-only?</button>
+            </div>
+
+            <form id="chatForm" class="composer">
+              <label for="chatInput">Ask the evidence</label>
+              <div class="composer-row">
+                <textarea id="chatInput" rows="2" placeholder="What did the Transformer replace recurrence with?" disabled></textarea>
+                <button type="submit" class="btn btn-primary" id="sendQuestion" disabled>Ask</button>
+              </div>
+              <p class="composer-meta"><span id="evidenceCount">0 sources indexed</span><span aria-hidden="true"> · </span><span id="answerMode">Evidence search</span><span aria-hidden="true"> · </span><span>Ctrl/⌘ + Enter</span></p>
+            </form>
+          </section>
+        </article>
+
+        <aside class="margin" aria-labelledby="marginHeading">
+          <h2 id="marginHeading" class="section-label">Reference trail</h2>
+          <div class="field field-compact">
+            <label for="refSearch" class="sr-only">Find within references</label>
+            <input id="refSearch" type="search" placeholder="Find a title, author or DOI" autocomplete="off">
+          </div>
           <div class="filters" role="group" aria-label="Filter references by access">
             <button type="button" class="filter-btn is-active" data-filter="all" aria-pressed="true">All <span id="allCount">0</span></button>
             <button type="button" class="filter-btn" data-filter="full-text-found" aria-pressed="false">Full text <span id="fullCount">0</span></button>
             <button type="button" class="filter-btn" data-filter="abstract-only" aria-pressed="false">Abstract <span id="abstractCount">0</span></button>
           </div>
-
-          <ol id="navRefList" class="nav-list" aria-label="References"></ol>
+          <ol id="navRefList" class="sidenotes" aria-label="References"></ol>
           <p id="navEmpty" class="muted hidden">No references match this view.</p>
 
-          <p class="pane-foot">Selecting a reference — here, on the map, or in the reading list — inspects it in the centre pane. Ctrl+V maps citations; it does not bypass paywalls.</p>
-        </aside>
-
-        <!-- CENTRE PANE : STAGE -->
-        <section class="pane pane-stage" aria-labelledby="stageHeading">
-          <div class="stage-head">
-            <div>
-              <p class="eyebrow">Explore</p>
-              <h2 id="stageHeading" class="pane-title">Map &amp; reading list</h2>
-            </div>
-            <div class="view-switch" role="group" aria-label="Centre pane view">
-              <button type="button" id="viewMapBtn" class="is-active" aria-pressed="true">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="8" r="2.4"/><circle cx="10" cy="18" r="2.4"/><path d="M8.2 7 15.6 7.7M7 8.2l2 7.4M16.6 10.2l-4.4 5.6"/></svg>
-                Map
-              </button>
-              <button type="button" id="viewListBtn" aria-pressed="false">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 6h12M8.5 12h12M8.5 18h12"/><circle cx="4.5" cy="6" r="1" /><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>
-                Reading list
-              </button>
-            </div>
-          </div>
-
-          <div id="graphView">
-            <p class="count-line"><strong id="graphCount">0</strong> references connected to the seed paper</p>
-            <div id="graphCanvas" class="graph"></div>
-            <ul class="legend" aria-label="Map legend">
-              <li><i class="dot dot-seed"></i>Seed paper</li>
-              <li><i class="dot dot-full"></i>Open full text</li>
-              <li><i class="dot dot-abstract"></i>Abstract only</li>
-              <li><i class="dot dot-missing"></i>Checking / not found</li>
-            </ul>
-          </div>
-
-          <div id="listView" class="hidden">
-            <div id="referencesList" class="ref-list"></div>
-            <div id="emptyReferences" class="empty hidden">
-              <strong>No references parsed yet</strong>
-              <p>Add the paper text with its reference section, or a DOI, and trace again.</p>
-            </div>
-          </div>
-
           <section class="inspector" id="inspector" aria-labelledby="inspectorTitle" aria-live="polite"></section>
-        </section>
-
-        <!-- RIGHT PANE : ASK -->
-        <aside class="pane pane-ask" aria-labelledby="askHeading">
-          <p class="eyebrow">Ask with evidence</p>
-          <h2 id="askHeading" class="pane-title">Questions, cited</h2>
-          <p class="muted ask-intro">Answers use the seed paper, abstracts, and any open copies you index. Abstract-only sources are labelled and can only support what their abstract shows.</p>
-
-          <div class="suggestions" id="suggestedQuestions">
-            <button type="button" class="chip suggestion">What ideas connect these papers?</button>
-            <button type="button" class="chip suggestion">Which sources are abstract-only?</button>
-          </div>
-
-          <div id="chatMessages" class="messages" aria-live="polite" aria-label="Conversation"></div>
-
-          <form id="chatForm" class="composer">
-            <label class="sr-only" for="chatInput">Ask a question about this paper and its references</label>
-            <textarea id="chatInput" rows="3" placeholder="Ask across the evidence…" disabled></textarea>
-            <div class="composer-row">
-              <p class="composer-meta"><span id="evidenceCount">0 sources indexed</span><span id="answerMode">Evidence search</span></p>
-              <button type="submit" class="btn btn-primary btn-send" id="sendQuestion" disabled>
-                Ask
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>
-              </button>
-            </div>
-            <p class="composer-hint">Ctrl/⌘ + Enter to send. Claims cite [S1], [S2]… below each answer.</p>
-          </form>
         </aside>
       </div>
 
-      <footer class="workspace-foot">
-        <span>Use copies only under their applicable access and reuse terms; an open URL is not a reuse licence.</span>
-        <span>Everything lives in this tab’s memory — close the tab and it is gone.</span>
-      </footer>
+      <section class="trail" aria-labelledby="stageHeading">
+        <div class="trail-head">
+          <h2 id="stageHeading">The reference trail</h2>
+          <div class="view-switch" role="group" aria-label="Trail view">
+            <button type="button" id="viewMapBtn" class="is-active" aria-pressed="true">Map</button>
+            <button type="button" id="viewListBtn" aria-pressed="false">Reading list</button>
+          </div>
+        </div>
+        <div id="graphView">
+          <p class="count-line"><strong id="graphCount">0</strong> references connected to the seed paper</p>
+          <div id="graphCanvas" class="graph"></div>
+          <ul class="legend" aria-label="Map legend">
+            <li><i class="key key-seed"></i>Seed paper</li>
+            <li><i class="key key-full"></i>Full text, downloaded</li>
+            <li><i class="key key-abstract"></i>Abstract only</li>
+            <li><i class="key key-missing"></i>Checking or not found</li>
+          </ul>
+        </div>
+        <div id="listView" class="hidden">
+          <div id="referencesList" class="ref-list"></div>
+          <div id="emptyReferences" class="empty hidden">
+            <strong>No references parsed yet</strong>
+            <p>Add the paper text with its reference section, or a DOI, and trace again.</p>
+          </div>
+        </div>
+      </section>
+
+      <p class="colophon">Ctrl+V maps citations; it does not bypass paywalls. Use copies only under their access and reuse terms — an open URL is not a reuse licence. Everything lives in this tab’s memory; close the tab and it is gone.</p>
     </section>
   </main>
 
   <footer class="site-footer">
-    <span>Ctrl+V — built for open research.</span>
-    <button type="button" class="btn btn-quiet open-settings">Sources &amp; AI settings</button>
+    <span>ctrl+v — built for open research.</span>
+    <button type="button" class="btn btn-link open-settings">Sources &amp; AI settings</button>
   </footer>
 
   <dialog id="settingsDialog" aria-labelledby="settingsTitle">
     <form method="dialog" class="settings" id="settingsForm">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">Configure</p>
-          <h2 id="settingsTitle">Sources &amp; AI</h2>
-        </div>
+      <div class="settings-head">
+        <h2 id="settingsTitle">Sources &amp; AI</h2>
         <button type="button" class="btn btn-icon" id="closeSettings" aria-label="Close settings">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
       </div>
-      <p class="muted">Values stay in this tab’s memory and are sent only with requests to the services you configure. Paper chunks go to an embeddings endpoint if you set one; retrieved excerpts go to a chat model if you set one.</p>
+      <p class="muted">Values stay in this tab’s memory and are sent only with requests to the services you configure. Paper passages go to an embeddings endpoint if you set one; retrieved excerpts go to a chat model if you set one.</p>
       <p id="serverAiNote" class="note hidden"></p>
 
       <h3>Open-access discovery</h3>
@@ -274,7 +213,7 @@
         <input id="coreApiKey" type="password" placeholder="Enables the CORE repository fallback" autocomplete="new-password">
       </div>
 
-      <h3>Semantic retrieval (embeddings)</h3>
+      <h3>Semantic retrieval</h3>
       <div class="field-row">
         <div class="field">
           <label for="embeddingBase">Embeddings API base</label>
@@ -288,10 +227,10 @@
       <div class="field">
         <label for="embeddingKey">Embeddings API key</label>
         <input id="embeddingKey" type="password" placeholder="Optional for local endpoints such as Ollama" autocomplete="new-password">
-        <p class="help">On the first question, sources are embedded in memory, ranked by cosine similarity plus a lexical signal, then expanded through the citation graph. Any OpenAI-style <code>/embeddings</code> endpoint works.</p>
+        <p class="help">Sources are embedded in the background once free copies are downloaded, then ranked by meaning plus keywords and expanded through the citation graph. Any OpenAI-style <code>/embeddings</code> endpoint works.</p>
       </div>
 
-      <h3>Answer synthesis (chat model)</h3>
+      <h3>Answer synthesis</h3>
       <div class="field">
         <label for="modelBase">OpenAI-compatible API base</label>
         <input id="modelBase" type="url" placeholder="https://api.openai.com/v1" autocomplete="off">
@@ -306,7 +245,7 @@
           <input id="modelKey" type="password" placeholder="Optional for local endpoints" autocomplete="new-password">
         </div>
       </div>
-      <p class="help">With a model, retrieved evidence is synthesised with inline [S#] citations. Without one, Ctrl+V returns the top passages themselves.</p>
+      <p class="help">With a model, answers are written from the retrieved evidence with numbered citations. Without one, Ctrl+V shows the top passages themselves.</p>
 
       <div class="settings-actions">
         <button type="button" class="btn btn-quiet btn-danger" id="clearSettings">Clear all values</button>
@@ -319,4 +258,3 @@
   <script src="/app.js" defer></script>
 </body>
 </html>
-

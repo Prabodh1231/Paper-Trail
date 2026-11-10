@@ -22,7 +22,6 @@ References
 [3] Hochreiter, S. and Schmidhuber, J. Long Short-Term Memory. Neural Computation, 1997. DOI: 10.1162/neco.1997.9.8.1735
 [4] Cho, K. et al. Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation. 2014. DOI: 10.3115/v1/D14-1179`;
 
-const SPARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/></svg>';
 const EXT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg>';
 
 /* ---------- helpers ---------- */
@@ -36,7 +35,10 @@ async function loadServerConfig(){
     const r = await fetch('/api/config', { cache: 'no-store' });
     if (r.ok) state.serverAI = { ...state.serverAI, ...(await r.json()).serverAI };
   }catch{ /* server defaults are optional */ }
-  const parts = [state.serverAI.chat && `answers: ${state.serverAI.chat}`, state.serverAI.embeddings && `embeddings: ${state.serverAI.embeddings}`, state.serverAI.rerank && `rerank: ${state.serverAI.rerank}`].filter(Boolean);
+  // The embeddings setting may list fallbacks ("a,b,c"); show the first and how many back it up.
+  const embedList = String(state.serverAI.embeddings || '').split(',').map(s => s.trim()).filter(Boolean);
+  const embedLabel = embedList.length > 1 ? `${embedList[0]} (+${embedList.length - 1} fallback${embedList.length > 2 ? 's' : ''})` : embedList[0];
+  const parts = [state.serverAI.chat && `answers: ${state.serverAI.chat}`, embedLabel && `embeddings: ${embedLabel}`, state.serverAI.rerank && `rerank: ${state.serverAI.rerank}`].filter(Boolean);
   const note = $('#serverAiNote');
   if (note){
     note.textContent = parts.length ? `Server default (${state.serverAI.provider}, from .env): ${parts.join(' · ')}. Anything you fill in below overrides it for this tab.` : '';
@@ -270,7 +272,7 @@ function refActionButtons(reference){
   const loc = reference.locations?.[0];
   const openUrl = safeExternalUrl(loc?.url);
   const indexBtn = reference.access === 'full-text-found' && reference.locations?.some(e => safeHttpsUrl(e.url))
-    ? `<button class="ref-action primary index-copy" data-ref-id="${escapeHtml(reference.id)}" type="button" ${indexed || reference.indexing ? 'disabled' : ''} ${reference.indexError ? `title="${escapeHtml(reference.indexError)}"` : ''}>${indexed ? 'Indexed ✓' : reference.indexing ? 'Downloading…' : reference.indexError ? 'Retry download' : 'Index free copy'}</button>` : '';
+    ? `<button class="ref-action primary index-copy" data-ref-id="${escapeHtml(reference.id)}" type="button" ${indexed || reference.indexing ? 'disabled' : ''} ${reference.indexError ? `title="${escapeHtml(reference.indexError)}"` : ''}>${indexed ? 'Indexed ✓' : reference.indexing ? 'Downloading…' : reference.indexError ? 'Retry download' : 'Download free copy'}</button>` : '';
   const linkBtn = openUrl
     ? `<a class="ref-action" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener noreferrer">Open source ${EXT}</a>`
     : reference.doi ? `<a class="ref-action" href="https://doi.org/${encodeURIComponent(reference.doi)}" target="_blank" rel="noopener noreferrer">View DOI ${EXT}</a>` : '';
@@ -288,8 +290,13 @@ function renderInspector(){
   const ref = state.refs.find(r => r.id === state.selectedRefId);
   if (!ref){
     const locCount = state.paper?.locations?.length || 0;
+    const seedFull = state.paper?.sourceLabel === 'main paper text';
+    const seedNote = seedFull
+      ? `Its full text is in the evidence${locCount ? ` (${locCount} free location${locCount === 1 ? '' : 's'} found)` : ''}.`
+      : state.paper?.indexing ? 'Downloading its free copy now…'
+      : locCount ? `${locCount} free location${locCount === 1 ? '' : 's'} found — use “Download the paper’s free copy” above to add its full text.` : '';
     box.innerHTML = `<p class="eyebrow">Inspector</p><h3 id="inspectorTitle">${escapeHtml(state.paper?.title || 'Seed paper')}</h3>
-      <p class="ref-meta">The seed paper. ${locCount ? `${locCount} free location${locCount === 1 ? '' : 's'} found for it — use “Index main free copy” above to add its full text.` : 'Select any reference — in the navigator, on the map, or in the reading list — to see where it can be read, its match confidence, and its abstract.'}</p>`;
+      <p class="ref-meta">The seed paper. ${seedNote} Select any reference — in the margin, on the map, or in the reading list — to see where it can be read, its match confidence and its abstract.</p>`;
     return;
   }
   const index = state.refs.indexOf(ref);
@@ -366,7 +373,7 @@ function updateEvidenceControls(){
     : (hasChatModel() ? `LLM + lexical graph${rerank}` : `Lexical graph search${rerank}`);
 }
 function welcomeMessage(html){
-  $('#chatMessages').innerHTML = `<div class="msg msg-assistant welcome-message"><span class="avatar" aria-hidden="true">${SPARK}</span><div><strong>Reading companion</strong>${html}</div></div>`;
+  $('#chatMessages').innerHTML = `<div class="msg msg-note welcome-message">${html}</div>`;
 }
 
 /* ---------- explore flow (progressive, batches of 3) ---------- */
@@ -751,8 +758,15 @@ async function rankEvidenceSemantic(question){
 }
 
 /* ---------- Q&A ---------- */
+// Citations like [S1], [S1][S2] or [S1, S3] become superscript numbers that match
+// the numbered source list under each answer.
 function renderAnswerText(text){
-  return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\[(S\d+)\]/g, '<span class="src-chip">[$1]</span>');
+  return escapeHtml(String(text || '').trim())
+    .replace(/^[ \t]*[*-][ \t]+/gm, '• ')          // markdown bullets
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[((?:S\d+)(?:\s*,\s*S\d+)*)\]/g, (m, group) => group.split(',')
+      .map(s => `<sup class="cite" aria-label="source ${s.trim().slice(1)}">${s.trim().slice(1)}</sup>`).join(''));
 }
 function isAccessQuestion(query){
   const access = /\b(abstract.?only|full.?text|free.?cop(?:y|ies)|open.?access|paywall(?:ed)?|availab(?:le|ility)|unavailable|accessible|can i (?:read|access))\b/i;
@@ -766,9 +780,9 @@ async function askQuestion(question){
   const query = question.trim(); if (!query) return;
   const messages = $('#chatMessages');
   messages.querySelector('.welcome-message')?.remove();
-  messages.insertAdjacentHTML('beforeend', `<div class="msg msg-user">${escapeHtml(query)}</div>`);
+  messages.insertAdjacentHTML('beforeend', `<div class="msg msg-user"><p class="q-label">You asked</p><h3>${escapeHtml(query)}</h3></div>`);
   const loadingId = `answer-${Date.now()}`;
-  messages.insertAdjacentHTML('beforeend', `<div id="${loadingId}" class="msg msg-assistant"><span class="avatar" aria-hidden="true">${SPARK}</span><div><strong>Searching your evidence…</strong><p>Retrieving passages and following citation links.</p></div></div>`);
+  messages.insertAdjacentHTML('beforeend', `<div id="${loadingId}" class="msg msg-assistant is-loading"><p class="a-label">Answer</p><p class="loading"><span class="spinner" aria-hidden="true"></span>Searching your evidence and following citation links…</p></div>`);
   $('#chatInput').value = ''; $('#chatInput').disabled = true; $('#sendQuestion').disabled = true;
   messages.scrollTop = messages.scrollHeight;
   try{
@@ -795,17 +809,17 @@ async function askQuestion(question){
     });
     const citations = evidence.map((item, index) => {
       const u = safeExternalUrl(item.url);
-      return `<div class="citation"><strong>[S${index + 1}]</strong> ${escapeHtml(item.title)} · ${escapeHtml(item.accessLabel)} · ${escapeHtml(item.relationship || 'retrieved source')}${u ? ` · <a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">open source</a>` : ''}</div>`;
+      return `<li><span class="c-num">${index + 1}</span><span><span class="c-title">${escapeHtml(item.title)}</span><span class="c-meta">${escapeHtml(item.accessLabel)} · ${escapeHtml(item.relationship || 'retrieved source')}${u ? ` · <a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">open source</a>` : ''}</span></span></li>`;
     }).join('');
     document.getElementById(loadingId).outerHTML =
-      `<div class="msg msg-assistant"><span class="avatar" aria-hidden="true">${SPARK}</span><div><strong>${result.mode === 'model' ? 'Evidence-grounded synthesis' : 'Evidence passages'}${result.model ? ` · ${escapeHtml(result.model)}` : ''}</strong><div class="answer">${renderAnswerText(result.answer)}</div><div class="citations">${citations}</div></div></div>`;
+      `<div class="msg msg-assistant"><p class="a-label">${result.mode === 'model' ? 'Answer, from the evidence' : 'Matching passages'}${result.model ? ` · ${escapeHtml(result.model)}` : ''}</p><div class="answer">${renderAnswerText(result.answer)}</div>${citations ? `<ol class="citations" aria-label="Sources">${citations}</ol>` : ''}</div>`;
     $('#answerMode').textContent = result.mode === 'model'
       ? (retrievalMode === 'semantic' ? 'GraphRAG + AI' : retrievalMode === 'metadata' ? 'Access metadata + AI' : 'LLM + lexical graph')
       : (retrievalMode === 'semantic' ? 'Semantic GraphRAG' : retrievalMode === 'metadata' ? 'Access metadata' : 'Lexical graph search');
     if (retrievalMode !== 'metadata' && evidence.some(i => i.reranked)) $('#answerMode').textContent += ' + rerank';
   }catch (err){
     const el = document.getElementById(loadingId);
-    if (el) el.outerHTML = `<div class="msg msg-assistant"><span class="avatar" aria-hidden="true">!</span><div><strong>Could not complete the answer</strong><p>${escapeHtml(err.message)}</p></div></div>`;
+    if (el) el.outerHTML = `<div class="msg msg-assistant is-error"><p class="a-label">Could not complete the answer</p><p>${escapeHtml(err.message)}</p></div>`;
   }finally{
     $('#chatInput').disabled = state.documents.length === 0;
     $('#sendQuestion').disabled = state.documents.length === 0;
