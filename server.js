@@ -719,7 +719,7 @@ async function answerQuestion(input) {
 // are sometimes down. The model that answered is returned so the browser never
 // compares vectors from different models.
 async function embedTexts(input) {
-  const texts = Array.isArray(input.texts) ? input.texts.slice(0, 48).map((text) => String(text || '').slice(0, 12000)) : [];
+  const texts = Array.isArray(input.texts) ? input.texts.slice(0, 256).map((text) => String(text || '').slice(0, 12000)) : [];
   let models = [String(input.model || '').trim()];
   let base = String(input.baseUrl || '').trim().replace(/\/+$/, '');
   let apiKey = String(input.apiKey || '').trim();
@@ -924,7 +924,7 @@ async function handleApi(req, res, pathname) {
   }
 
   if (pathname === '/api/embeddings' && req.method === 'POST') {
-    const body = await readBody(req, 650 * 1024);
+    const body = await readBody(req, 4 * 1024 * 1024);
     return sendJson(res, 200, await embedTexts(body));
   }
 
