@@ -129,11 +129,27 @@ function paperOwnDoi(text){
   return arxivDoiFromStamp(text) || extractDoi(String(text || '').slice(0, 3000));
 }
 function extractDoi(text){ return normalizeDoi(text); }
+const VENUE_SEGMENT = /\b(?:journal|proceedings|proc\.|conference|transactions|neural computation|arxiv|corr|vol\.?|pp\.?|preprint|workshop|symposium)\b|^(?:in|advances in)\s/i;
+// An author segment: "Hochreiter, S. and Schmidhuber, J", "Ba, J. L., Kiros, J. R., and Hinton, G. E", "Smith et al".
+function isAuthorSegment(p){
+  const s = p.replace(/\bet\s+al\.?/gi, ' ').replace(/\band\b|&/gi, ',');
+  const pieces = s.split(',').map(x => x.trim()).filter(Boolean);
+  if (!pieces.length) return /\bet\s+al\b/i.test(p);
+  return pieces.every(x => /^(?:[A-Z]\.?\s*(?:-\s*)?)+$/.test(x) || /^\p{Lu}[\p{L}'’-]+(?:\s+(?:[A-Z]\.?\s*)+)?$/u.test(x) || /^(?:[A-Z]\.\s*)+\p{Lu}[\p{L}'’-]+$/u.test(x) || /^(?:van|von|de|der|da|di|le|la)\s+[\p{L}'’-]+$/iu.test(x));
+}
 function extractReferenceTitle(raw){
   const quoted = String(raw).match(/[“"]([^”"]{12,})[”"]|‘([^’]{12,})’/);
-  if (quoted) return (quoted[1] || quoted[2]).trim();
+  if (quoted) return (quoted[1] || quoted[2]).trim().replace(/[,.]+$/, '');
   const withoutDoi = String(raw).replace(/https?:\/\/\S+/gi, ' ').replace(/doi\s*:?\s*10\.\d{4,9}\/[\w.()/:;-]+/gi, ' ').replace(/^\s*(?:\[\d+\]|\(\d+\)|\d+[.)])\s*/, ' ');
-  const parts = withoutDoi.split(/\.\s+(?=[A-Z“"\[])/).map(p => p.trim()).filter(Boolean);
+  // Split into sentences; author initials ("S.", "J. L.") become author-like segments that are skipped.
+  const parts = withoutDoi.split(/\.\s+(?=[A-Z“"\[\d(]|arXiv)/).map(p => p.trim()).filter(Boolean);
+  const stripYear = p => p.replace(/\(?\b(?:19|20)\d{2}[a-z]?\b\)?/g, '').replace(/^[\s.,]+|[\s.,:;]+$/g, '').trim();
+  let i = 0;
+  while (i < parts.length - 1 && isAuthorSegment(stripYear(parts[i]))) i += 1;
+  for (let j = i; j < parts.length; j++){
+    const cand = parts[j].replace(/^\(?\b(?:19|20)\d{2}[a-z]?\b\)?[.,]?\s*/, '').replace(/[,:;.]+$/, '').trim();
+    if (cand.length >= 8 && !VENUE_SEGMENT.test(cand) && !isAuthorSegment(cand)) return cand;
+  }
   const meaningful = parts.filter(p => p.length > 24 && !/^(vol\.?|pp?\.?|journal|proceedings|arxiv|https?:)/i.test(p));
   if (meaningful.length >= 2){ const likely = meaningful.find(p => /\b(?:19|20)\d{2}\b/.test(p)) || meaningful[1]; return likely.replace(/\b(?:19|20)\d{2}\b/g, '').replace(/[,:;]+$/, '').trim(); }
   if (meaningful.length === 1) return meaningful[0].replace(/\b(?:19|20)\d{2}\b/g, '').trim();
@@ -490,6 +506,7 @@ async function autoPrepareSources(runId){
   if (!hasEmbeddings()){
     setProgress(1, 1, `${downloaded}. Ready for questions.`);
     hideProgressLater(runId);
+    showReadyMessage(runId);
     return;
   }
   const passageCount = collectPassages().length;
@@ -501,6 +518,16 @@ async function autoPrepareSources(runId){
     if (runId === state.runId) setProgress(1, 1, `${downloaded}. Embedding failed (${err.message}); questions will use keyword search.`);
   }
   hideProgressLater(runId, 6000);
+  showReadyMessage(runId);
+}
+// Replace the "downloading…" intro once preparation finishes, unless the user
+// has already started asking questions (which removes the welcome message).
+function showReadyMessage(runId){
+  const intro = document.querySelector('#chatMessages .welcome-message');
+  if (runId !== state.runId || !intro || !intro.textContent.includes('Your trail is ready')) return;
+  const copies = state.fulltexts.length;
+  const abstracts = state.documents.filter(d => d.type === 'abstract').length;
+  welcomeMessage(`<p>Ready. ${copies} free cop${copies === 1 ? 'y' : 'ies'} and ${abstracts} abstract${abstracts === 1 ? '' : 's'} are in the evidence — ask a question below.</p>`);
 }
 
 /* ---------- file loading / PDF.js (CDN, as before) ---------- */

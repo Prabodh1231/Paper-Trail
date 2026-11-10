@@ -350,7 +350,9 @@ async function semanticSeedReferences(doi, query) {
       ? `https://api.semanticscholar.org/graph/v1/paper/DOI:${encodeURIComponent(doi)}?fields=${encodeURIComponent(fields)}`
       : `https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(query)}&limit=1&fields=${encodeURIComponent(fields)}`;
     const data = await fetchJson(endpoint);
-    const work = data.data?.[0] || data;
+    const work = doi ? data : data.data?.[0];
+    // A title search can return an unrelated paper; only trust a close title match.
+    if (!work || (!doi && titleSimilarity(query, work.title || '') < 0.58)) return [];
     return (work.references || []).map((reference) => ({
       raw: reference.title || 'Reference from Semantic Scholar',
       title: reference.title || '',
