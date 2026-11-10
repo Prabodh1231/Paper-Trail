@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f4">
+  <meta name="description" content="Follow the references in a research paper, find open versions, and ask evidence-grounded questions.">
+  <title>Ctrl+V — Open research, connected</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Ctrl+V home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span class="brand-name">ctrl<span>+</span>v</span>
+      </a>
+
+      <div class="sidebar-label">WORKSPACE</div>
+      <button class="nav-item active" id="navWorkspace" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H20v15.5a.5.5 0 0 1-.5.5h-14A1.5 1.5 0 0 1 4 18.5z"/><path d="M4 17.5A1.5 1.5 0 0 1 5.5 16H20M8 8h8M8 11h6"/></svg>
+        <span>Reading room</span>
+      </button>
+      <button class="nav-item" id="navSources" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.3"/><circle cx="18" cy="7" r="2.3"/><circle cx="12" cy="18" r="2.3"/><path d="m8 6.4 7.7.9M7.1 8l3.8 7.8m5.8-6.9-3.5 7"/></svg>
+        <span>Source graph</span>
+      </button>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label">YOUR SESSION</div>
+      <div class="session-card">
+        <div class="session-dot"></div>
+        <div><strong>Private reading room</strong><span>Sources stay in this tab</span></div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-note"><span class="note-icon">✳</span><p>Open knowledge grows when we can follow the trail.</p></div>
+        <div class="sidebar-foot">
+          <span class="mini-mark">CV</span>
+          <span>Built for open research</span>
+          <button id="settingsButton" class="icon-button" type="button" aria-label="Settings" title="Settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4 1.4-1.1a7.2 7.2 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a7.2 7.2 0 0 1 0 2Z" transform="translate(-1.5 -1.5) scale(1.13)"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="breadcrumb"><span>Ctrl+V</span><span class="crumb-slash">/</span><strong id="crumbLabel">Reading room</strong></div>
+        <div class="topbar-right">
+          <div class="privacy-pill"><span class="privacy-dot"></span> Local-first</div>
+          <button id="topSettingsButton" class="top-settings" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a7.8 7.8 0 0 0 0-6l1.4-1.1-1.5-2.5-1.7.7a8 8 0 0 0-5.2-1.5l-.6-1.8h-3l-.6 1.8a8 8 0 0 0-2.6 1.5l-1.7-.7L2.4 8l1.4 1.1a7.8 7.8 0 0 0 0 6l-1.4 1.1 1.5 2.5 1.7-.7a8 8 0 0 0 2.6 1.5l.6 1.8h3l.6-1.8a8 8 0 0 0 2.6-1.5l1.7.7 1.5-2.5z"/></svg><span>Sources & AI</span></button>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <section id="landingView" class="landing-view">
+          <div class="hero">
+            <div class="hero-copy">
+              <div class="eyebrow"><span class="eyebrow-star">✳</span> Open literature, made navigable</div>
+              <h1>A paper is<br>only the <em>beginning.</em></h1>
+              <p class="hero-subtitle">Follow its references, find free-to-read copies, and ask questions across the evidence you can access.</p>
+              <div class="hero-proof"><span class="proof-avatars"><i>R</i><i>O</i><i>↗</i></span><span>One paper can open a whole field.</span></div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+              <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="art-orbit orbit-three"></div>
+              <div class="art-line line-one"></div><div class="art-line line-two"></div><div class="art-line line-three"></div><div class="art-line line-four"></div>
+              <div class="art-node node-center"><span class="node-sheet"><i></i><i></i><i></i></span><b>paper</b></div>
+              <div class="art-node node-a"><span class="art-dot teal"></span><b>idea</b></div>
+              <div class="art-node node-b"><span class="art-dot coral"></span><b>method</b></div>
+              <div class="art-node node-c"><span class="art-dot lilac"></span><b>evidence</b></div>
+              <div class="art-node node-d"><span class="art-dot gold"></span><b>context</b></div>
+              <div class="art-node node-e"><span class="art-dot blue"></span><b>next</b></div>
+              <div class="art-caption">A connected reading path</div>
+            </div>
+          </div>
+
+          <section class="start-card" aria-labelledby="startHeading">
+            <div class="start-card-head">
+              <div><div class="section-kicker">START WITH A PAPER</div><h2 id="startHeading">Bring a paper into your reading room</h2></div>
+              <button class="sample-link" id="sampleButton" type="button"><span>✦</span> Try a sample</button>
+            </div>
+
+            <div class="intake-grid">
+              <div class="upload-column">
+                <label class="dropzone" id="dropZone" for="paperFile">
+                  <input id="paperFile" type="file" accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown">
+                  <span class="upload-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
+                  <strong id="uploadLabel">Drop a PDF here, or <u>browse files</u></strong>
+                  <span class="upload-sub">PDF, TXT or Markdown · processed in this tab</span>
+                </label>
+                <div class="or-divider"><span>OR ADD DETAILS</span></div>
+                <div class="field-row">
+                  <label class="field-label" for="paperDoi">Paper DOI <span>optional</span></label>
+                  <input id="paperDoi" class="text-field" type="text" placeholder="10.1234/example.paper" autocomplete="off">
+                </div>
+              </div>
+              <div class="paper-input-column">
+                <div class="field-row">
+                  <label class="field-label" for="paperTitle">Paper title</label>
+                  <input id="paperTitle" class="text-field" type="text" placeholder="Paste a title or upload a paper" autocomplete="off">
+                </div>
+                <div class="field-row paper-text-row">
+                  <label class="field-label" for="paperText">Paper text or abstract <span>references help build the graph</span></label>
+                  <textarea id="paperText" class="text-field text-area" placeholder="Paste the paper text here, or add a PDF above. We’ll extract its reference list and look for openly available versions."></textarea>
+                </div>
+                <div class="intake-actions">
+                  <span class="intake-hint"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 20 7v5.1c0 4.3-3.1 7.2-8 8.9-4.9-1.7-8-4.6-8-8.9V7z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg> Your files are not saved by this app.</span>
+                  <button id="exploreButton" class="primary-button" type="button"><span>Explore references</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="service-strip">
+            <span class="service-strip-label">CONNECTING OPEN RESEARCH</span>
+            <span class="service-wordmark crossref">Crossref</span>
+            <span class="service-wordmark openalex"><i></i> OpenAlex</span>
+            <span class="service-wordmark unpaywall"><i>↗</i> Unpaywall</span>
+            <span class="service-wordmark core"><span>CORE</span></span>
+            <span class="service-wordmark s2">Semantic Scholar</span>
+            <span class="service-wordmark">OpenAIRE</span>
+            <span class="service-wordmark">Europe PMC</span>
+            <span class="service-wordmark">arXiv</span>
+          </div>
+        </section>
+
+        <section id="workspaceView" class="workspace-view hidden" aria-live="polite">
+          <div class="workspace-heading">
+            <div class="workspace-title-wrap"><button id="backButton" class="back-button" type="button" aria-label="Back to start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div><div class="section-kicker">YOUR READING ROOM</div><h1 id="workspaceTitle">Research paper</h1><div class="workspace-meta" id="workspaceMeta"></div></div></div>
+            <div class="workspace-actions"><button id="seedIndexButton" class="secondary-button hidden" type="button">Index main free copy</button><button id="addPaperButton" class="secondary-button" type="button"><span>＋</span> Add another paper</button></div>
+          </div>
+
+          <div id="noticeBar" class="notice-bar hidden"></div>
+
+          <div class="workspace-grid">
+            <div class="left-workspace">
+              <section class="panel graph-panel">
+                <div class="panel-head">
+                  <div><div class="section-kicker">CITATION MAP</div><h2>Follow the paper trail</h2></div>
+                  <div class="graph-count"><span id="graphCount">0</span> references</div>
+                </div>
+                <div id="graphCanvas" class="graph-canvas" aria-label="Interactive map of the seed paper and its references"></div>
+                <div class="graph-legend"><span><i class="legend-seed"></i> Starting paper</span><span><i class="legend-full"></i> Open full text</span><span><i class="legend-abstract"></i> Abstract only</span><span><i class="legend-missing"></i> Checking / not found</span></div>
+              </section>
+
+              <section class="panel references-panel">
+                <div class="panel-head references-head">
+                  <div><div class="section-kicker">REFERENCES FOUND</div><h2>Sources along the way</h2></div>
+                  <div class="filter-tabs" role="group" aria-label="Filter references">
+                    <button class="filter-tab active" type="button" data-filter="all">All <span id="allCount">0</span></button>
+                    <button class="filter-tab" type="button" data-filter="full-text-found">Full text <span id="fullCount">0</span></button>
+                    <button class="filter-tab" type="button" data-filter="abstract-only">Abstract <span id="abstractCount">0</span></button>
+                  </div>
+                </div>
+                <div id="referencesList" class="references-list"></div>
+                <div id="emptyReferences" class="empty-state hidden"><span class="empty-icon">↗</span><strong>No references parsed yet</strong><p>Add the paper text with its reference section and try again.</p></div>
+              </section>
+            </div>
+
+            <aside class="right-workspace">
+              <section class="panel chat-panel">
+                <div class="chat-heading"><div class="chat-mark">✳</div><div><div class="section-kicker">GROUNDED IN YOUR SOURCES</div><h2>Ask across the graph</h2></div></div>
+                <p class="chat-intro">Questions are answered from the paper, indexed open copies and abstracts. Each claim points back to its source.</p>
+                <div class="suggested-questions" id="suggestedQuestions">
+                  <button type="button" class="suggestion">What ideas connect these papers?</button>
+                  <button type="button" class="suggestion">Which sources are abstract-only?</button>
+                </div>
+                <div id="chatMessages" class="chat-messages"><div class="assistant-message welcome-message"><span class="assistant-avatar">✳</span><div><strong>Your reading companion</strong><p>Index a few open copies or use the abstracts found for this paper, then ask a question about the evidence.</p></div></div></div>
+                <form id="chatForm" class="chat-composer">
+                  <label for="chatInput" class="sr-only">Ask a question about this paper</label>
+                  <textarea id="chatInput" rows="2" placeholder="Ask a question about this paper…" disabled></textarea>
+                  <button id="sendQuestion" class="send-button" type="submit" aria-label="Send question" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+                  <div class="composer-foot"><span id="evidenceCount">0 sources indexed</span><span id="answerMode">Evidence search</span></div>
+                </form>
+                <div class="chat-disclaimer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg> Abstract-only results are labeled and may not support detailed claims.</div>
+              </section>
+
+              <section class="panel access-summary">
+                <div class="summary-top"><span class="summary-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 8v8l9 5 9-5V8z"/><path d="m3.5 8.5 8.5 5 8.5-5M12 13.5V21"/></svg></span><div><div class="section-kicker">ACCESS SNAPSHOT</div><h3>Reading access</h3></div></div>
+                <div class="access-meter"><span id="accessMeterFill"></span></div>
+                <div class="access-stats"><div><strong id="summaryFull">0</strong><span>full text</span></div><div><strong id="summaryAbstract">0</strong><span>abstracts</span></div><div><strong id="summaryUnavailable">0</strong><span>unavailable</span></div></div>
+                <p id="accessSummaryNote">We’ll check free-to-read locations for each reference.</p>
+              </section>
+            </aside>
+          </div>
+          <footer class="workspace-footer"><span>Ctrl+V maps citations; it does not bypass paywalls.</span><span>Only use copies and text under their applicable access and reuse terms.</span></footer>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="settingsDialog" class="settings-dialog">
+    <form method="dialog" class="settings-card" id="settingsForm">
+      <div class="settings-head"><div><div class="section-kicker">CONNECT YOUR SOURCES</div><h2>Settings</h2></div><button class="icon-button close-dialog" type="button" id="closeSettings" aria-label="Close settings">×</button></div>
+      <p class="settings-description">Credentials stay in this tab and are used only for requests to the configured APIs. When enabled, paper chunks go to the embeddings endpoint and retrieved excerpts go to the chat model.</p>
+      <div class="settings-section-title">Open access discovery</div>
+      <label class="field-row" for="unpaywallEmail"><span class="field-label">Unpaywall contact email</span><input id="unpaywallEmail" class="text-field" type="email" placeholder="name@university.edu" autocomplete="off"><span class="field-help">Required by Unpaywall’s free DOI lookup API.</span></label>
+      <label class="field-row" for="coreApiKey"><span class="field-label">CORE API key <span>optional</span></span><input id="coreApiKey" class="text-field" type="password" placeholder="Paste key to enable CORE fallback" autocomplete="new-password"><span class="field-help">CORE offers a limited free tier; check its terms for your use.</span></label>
+      <div class="settings-section-title ai-title">Semantic retrieval</div>
+      <div class="settings-two-col">
+        <label class="field-row" for="embeddingBase"><span class="field-label">Embeddings API base</span><input id="embeddingBase" class="text-field" type="url" placeholder="https://api.openai.com/v1" autocomplete="off"></label>
+        <label class="field-row" for="embeddingModel"><span class="field-label">Embedding model</span><input id="embeddingModel" class="text-field" type="text" placeholder="text-embedding-3-small" autocomplete="off"></label>
+      </div>
+      <label class="field-row" for="embeddingKey"><span class="field-label">Embeddings API key</span><input id="embeddingKey" class="text-field" type="password" placeholder="Optional for local endpoints" autocomplete="new-password"></label>
+      <p class="field-help model-help">On the first question, Ctrl+V embeds the paper and available references in memory, then combines semantic similarity with citation-graph expansion. Compatible with OpenAI-style /embeddings endpoints.</p>
+      <div class="settings-section-title ai-title">Optional answer synthesis</div>
+      <label class="field-row" for="modelBase"><span class="field-label">OpenAI-compatible API base</span><input id="modelBase" class="text-field" type="url" placeholder="https://api.openai.com/v1" autocomplete="off"></label>
+      <div class="settings-two-col"><label class="field-row" for="modelName"><span class="field-label">Model name</span><input id="modelName" class="text-field" type="text" placeholder="Your enabled model" autocomplete="off"></label><label class="field-row" for="modelKey"><span class="field-label">API key</span><input id="modelKey" class="text-field" type="password" placeholder="Optional" autocomplete="new-password"></label></div>
+      <p class="field-help model-help">The optional chat model synthesizes retrieved evidence and adds inline source labels. Without it, Ctrl+V returns the top passages. Local endpoints such as Ollama can omit the key.</p>
+      <div class="settings-actions"><button id="clearSettings" class="text-button" type="button">Clear values</button><button id="saveSettings" class="primary-button" type="button">Save for this tab</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>
